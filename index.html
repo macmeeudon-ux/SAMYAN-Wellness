@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ข้อมูลสมาชิก</title>
+<script>
+// ================= ตั้งค่า: แก้แค่ 2 บรรทัดนี้ =================
+const API_URL = 'วาง URL เว็บแอป ตรงนี้';
+const LIFF_ID = 'วาง LIFF ID ตรงนี้';
+// =============================================================
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  /* ฟอนต์ LINE Seed Sans TH: ไฟล์ line-rg และ line-bd อัปโหลดไว้ข้างๆ index.html
+     (ลองหา .woff2 → .ttf → .otf ตามลำดับ ถ้าไม่เจอจะใช้ Noto Sans Thai แทน) */
+  @font-face { font-family: 'LINE Seed Sans TH'; font-weight: 400; font-display: swap;
+    src: url('line-rg.woff2') format('woff2'), url('line-rg.ttf') format('truetype'), url('line-rg.otf') format('opentype'); }
+  @font-face { font-family: 'LINE Seed Sans TH'; font-weight: 700; font-display: swap;
+    src: url('line-bd.woff2') format('woff2'), url('line-bd.ttf') format('truetype'), url('line-bd.otf') format('opentype'); }
+  :root {
+    --bg: #FFFFFF; --ink: #1C1E21; --muted: #606770; --line: #E4E6EB;
+    --blue: #1877F2; --blue-dark: #0E5FCC; --blue-soft: #E7F0FD;
+    --green: #1B7F3B; --green-soft: #E6F4EA;
+    --red: #B3261E; --red-dark: #8C1D18; --red-soft: #FDECEA;
+    --amber: #8A5300; --amber-soft: #FFF4E5; --gray-soft: #F0F2F5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: 'LINE Seed Sans TH', 'Noto Sans Thai', sans-serif; line-height: 1.4; }
+  main { max-width: 480px; min-height: 100vh; margin: 0 auto; padding: 28px 20px 32px;
+         display: flex; flex-direction: column; gap: 16px; }
+  p { margin: 0; }
+  .hidden { display: none !important; }
+  section.page { display: flex; flex-direction: column; gap: 16px; flex-grow: 1; }
+
+  .hello { font-size: 20px; color: var(--muted); }
+  h1 { margin: 0; font-size: 32px; font-weight: 700; line-height: 1.3; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { padding: 6px 14px; border-radius: 999px; font-size: 18px; font-weight: 700; }
+  .chip.blue { background: var(--blue-soft); color: var(--blue-dark); }
+  .chip.ok { background: var(--green-soft); color: var(--green); }
+  .chip.bad { background: var(--red-soft); color: var(--red); }
+  .chip.warn { background: var(--amber-soft); color: var(--amber); }
+
+  .notice { border-radius: 16px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start;
+            font-size: 19px; font-weight: 600; line-height: 1.5; }
+  .notice svg { flex-shrink: 0; margin-top: 2px; }
+  .notice.bad { background: var(--red-soft); color: var(--red-dark); }
+  .notice.warn { background: var(--amber-soft); color: var(--amber); }
+
+  .hero { background: var(--blue); color: #fff; border-radius: 22px; padding: 22px 22px 24px;
+          display: flex; flex-direction: column; gap: 6px; }
+  .hero .t { font-size: 22px; font-weight: 600; }
+  .hero .num { display: flex; align-items: baseline; gap: 10px; }
+  .hero .num b { font-size: 88px; font-weight: 800; line-height: 1; }
+  .hero .num span { font-size: 32px; font-weight: 700; }
+  .hero.big20 .num b { font-size: 80px; }
+  .hero.off { background: var(--gray-soft); color: var(--ink); }
+  .hero.off .t, .hero.off .num { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+  .cell { height: 34px; border-radius: 10px; border: 2.5px solid #fff; display: flex;
+          align-items: center; justify-content: center; }
+  .cell.used { background: #fff; }
+  .big20 .grid { gap: 8px; }
+  .big20 .cell { height: 30px; border-radius: 9px; }
+
+  .card { border: 2px solid var(--line); border-radius: 20px; padding: 18px 20px;
+          display: flex; gap: 16px; align-items: center; }
+  .icon { width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px; background: var(--blue-soft);
+          display: flex; align-items: center; justify-content: center; }
+  .icon.bad { background: var(--red-soft); }
+  .card .lbl { font-size: 19px; color: var(--muted); }
+  .card .val { font-size: 26px; font-weight: 700; }
+  .card .val small { font-size: 19px; font-weight: 400; color: var(--muted); }
+  .card .sub { font-size: 19px; font-weight: 600; color: var(--blue-dark); }
+  .card .note { font-size: 17px; color: var(--muted); }
+
+  button { font-family: inherit; cursor: pointer; }
+  .btn { height: 64px; border-radius: 16px; border: 0; background: var(--blue); color: #fff;
+         font-size: 26px; font-weight: 700; width: 100%; }
+  .btn:disabled { opacity: .6; }
+  .btn.outline { height: 60px; background: #fff; color: var(--blue); border: 2px solid var(--blue); font-size: 22px; }
+  .bottom { margin-top: auto; }
+
+  .logo { width: 84px; height: 84px; border-radius: 26px; background: var(--blue-soft);
+          display: flex; align-items: center; justify-content: center; margin-top: 20px; }
+  .lead { font-size: 22px; line-height: 1.5; }
+  .muted { font-size: 18px; color: var(--muted); line-height: 1.5; }
+  label { font-size: 20px; font-weight: 600; }
+  input { height: 72px; width: 100%; border: 2px solid var(--blue); border-radius: 16px; padding: 0 18px;
+          font-family: inherit; font-size: 32px; letter-spacing: 2px; text-align: center; color: var(--ink);
+          outline: none; box-shadow: 0 0 0 4px var(--blue-soft); }
+  .err { color: var(--red); font-size: 19px; font-weight: 700; white-space: pre-line; }
+  .center { text-align: center; align-items: center; justify-content: center; }
+  .spin { width: 48px; height: 48px; border-radius: 50%; border: 5px solid var(--blue-soft);
+          border-top-color: var(--blue); animation: s 1s linear infinite; }
+  @keyframes s { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<main>
+  <!-- กำลังโหลด -->
+  <section id="loading" class="page center">
+    <div class="spin" aria-hidden="true"></div>
+    <p class="lead">กำลังโหลดข้อมูล...</p>
+  </section>
+
+  <!-- กรอกเบอร์ (ครั้งแรกครั้งเดียว) -->
+  <section id="phone" class="page hidden">
+    <div class="logo">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1877F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h1>ยินดีต้อนรับ</h1>
+      <p class="lead">กรอกเบอร์โทรศัพท์ที่ให้ไว้กับทางเรา</p>
+      <p class="muted">ทำครั้งเดียว ครั้งต่อไปเปิดดูได้ทันที</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+      <label for="phoneInput">เบอร์โทรศัพท์</label>
+      <input id="phoneInput" type="tel" inputmode="numeric" maxlength="12" placeholder="08x xxx xxxx" autocomplete="tel">
+      <p class="err" id="phoneErr"></p>
+    </div>
+    <button class="btn bottom" id="phoneBtn">ยืนยัน</button>
+  </section>
+
+  <!-- ข้อมูลสมาชิก -->
+  <section id="info" class="page hidden">
+    <div>
+      <p class="hello">สวัสดี</p>
+      <h1 id="name">-</h1>
+    </div>
+    <div class="chips">
+      <span class="chip blue" id="pkg">-</span>
+      <span class="chip ok" id="status">-</span>
+    </div>
+    <div class="notice hidden" id="notice"></div>
+    <div class="hero" id="hero">
+      <p class="t" id="heroTitle">เหลืออีก</p>
+      <p class="num"><b id="left">-</b><span>ครั้ง</span></p>
+      <p class="t" id="usedText" style="margin-top:4px">-</p>
+      <div class="grid" id="grid" aria-hidden="true"></div>
+    </div>
+    <div class="card">
+      <div class="icon" id="dateIcon"></div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <p class="lbl" id="dateLabel">ใช้ได้ถึงวันที่</p>
+        <p class="val" id="expire">-</p>
+        <p class="sub" id="daysLeft"></p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1877F2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <p class="lbl">ลาได้อีก</p>
+        <p class="val"><span id="leave">-</span> ครั้ง <small id="leaveTotal"></small></p>
+        <p class="note">ลาไม่เสียครั้ง</p>
+      </div>
+    </div>
+    <button class="btn outline bottom" id="refreshBtn">โหลดข้อมูลใหม่</button>
+  </section>
+
+  <!-- ผิดพลาด -->
+  <section id="error" class="page center hidden">
+    <p class="err" id="errText" style="font-size:22px;text-align:center"></p>
+    <button class="btn" id="retryBtn" style="max-width:320px">ลองใหม่</button>
+  </section>
+</main>
+
+<script>
+const DEMO = LIFF_ID.startsWith('วาง') || new URLSearchParams(location.search).has('demo');
+const $ = id => document.getElementById(id);
+const show = id => ['loading', 'phone', 'info', 'error'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+
+const ICON_CAL = c => `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>`;
+const ICON_ALERT = c => `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>`;
+const ICON_CHECK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1877F2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+
+async function api(payload) {
+  if (DEMO) return demoData(payload);
+  payload.idToken = liff.getIDToken();
+  const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' } });   // text/plain เลี่ยงปัญหา CORS
+  return res.json();
+}
+
+function render(d) {
+  if (d.needPhone) return show('phone');
+  if (d.error && !d.name) { $('phoneErr').textContent = d.error; return show('phone'); }
+  if (d.error) { $('errText').textContent = d.error + '\nกรุณาติดต่อเจ้าหน้าที่'; return show('error'); }
+
+  const expired = d.status === 'expired';
+  $('name').textContent = 'คุณ' + d.name;
+  $('pkg').textContent = 'แพ็กเกจ ' + d.packageName;
+  const st = $('status');
+  st.className = 'chip ' + ({ active: 'ok', notStarted: 'blue', done: 'warn', expired: 'bad' }[d.status]);
+  st.textContent = d.statusText;
+
+  // กล่องแจ้งเตือน
+  let msg = '', kind = 'warn';
+  if (expired) { msg = 'แพ็กเกจหมดอายุแล้ว สอบถามการต่ออายุได้ที่เจ้าหน้าที่'; kind = 'bad'; }
+  else if (d.status === 'done') msg = 'ใช้ครบทุกครั้งแล้ว ขอบคุณที่มาเทรนกับเรา';
+  else if (d.status === 'active' && (d.remaining <= 2 || d.daysLeft <= 7)) msg = 'ใกล้หมดแล้ว อย่าลืมนัดเทรนให้ครบนะ';
+  const nt = $('notice');
+  nt.className = 'notice ' + kind + (msg ? '' : ' hidden');
+  nt.innerHTML = ICON_ALERT(kind === 'bad' ? '#B3261E' : '#8A5300') + '<span></span>';
+  nt.querySelector('span').textContent = msg;
+
+  // กล่องจำนวนครั้ง
+  const hero = $('hero');
+  hero.className = 'hero' + (d.total > 10 ? ' big20' : '') + (expired ? ' off' : '');
+  $('heroTitle').textContent = expired ? 'ครั้งที่ไม่ได้ใช้' : 'เหลืออีก';
+  $('left').textContent = d.remaining;
+  $('usedText').textContent = `เล่นไปแล้ว ${d.used} จาก ${d.total} ครั้ง`;
+  $('grid').classList.toggle('hidden', expired);
+  $('grid').innerHTML = Array.from({ length: d.total }, (_, i) =>
+    i < d.used ? `<div class="cell used">${ICON_CHECK}</div>` : '<div class="cell"></div>').join('');
+
+  // วันหมดอายุ
+  const fmt = iso => new Date(iso).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+  $('dateIcon').className = 'icon' + (expired ? ' bad' : '');
+  $('dateIcon').innerHTML = ICON_CAL(expired ? '#B3261E' : '#1877F2');
+  if (!d.expireDate) {
+    $('dateLabel').textContent = 'ใช้ได้ถึงวันที่';
+    $('expire').textContent = 'ยังไม่เริ่มนับ';
+    $('daysLeft').textContent = `เริ่มนับวันแรกที่มาเทรน (${d.months} เดือน)`;
+  } else if (expired) {
+    $('dateLabel').textContent = 'หมดอายุเมื่อ';
+    $('expire').textContent = fmt(d.expireDate);
+    $('daysLeft').textContent = '';
+  } else {
+    $('dateLabel').textContent = 'ใช้ได้ถึงวันที่';
+    $('expire').textContent = fmt(d.expireDate);
+    $('daysLeft').textContent = `เหลืออีก ${d.daysLeft} วัน`;
+  }
+
+  $('leave').textContent = d.leavesLeft;
+  $('leaveTotal').textContent = `จาก ${d.leavesTotal} ครั้ง`;
+  show('info');
+}
+
+async function load() {
+  show('loading');
+  try { render(await api({ action: 'me' })); }
+  catch (e) { $('errText').textContent = 'เชื่อมต่อไม่ได้\nตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'; show('error'); }
+}
+
+$('phoneBtn').onclick = async () => {
+  const btn = $('phoneBtn');
+  btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...'; $('phoneErr').textContent = '';
+  try { render(await api({ action: 'link', phone: $('phoneInput').value })); }
+  catch (e) { $('phoneErr').textContent = 'เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'; }
+  btn.disabled = false; btn.textContent = 'ยืนยัน';
+};
+$('refreshBtn').onclick = load;
+$('retryBtn').onclick = load;
+
+// ===== ข้อมูลตัวอย่าง (ใช้ตอนยังไม่ได้ใส่ LIFF ID) =====
+function demoData(p) {
+  const q = new URLSearchParams(location.search).get('demo');
+  if (q === 'phone' && p.action === 'me') return { needPhone: true };
+  const day = n => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString(); };
+  if (q === '20') return { name: 'พี่แหม่ม', packageName: '20 ครั้ง', total: 20, used: 13, remaining: 7,
+    leavesTotal: 4, leavesLeft: 3, months: 4, expireDate: day(65), daysLeft: 65, status: 'active', statusText: 'ใช้งานได้' };
+  if (q === 'expired') return { name: 'พี่บูรณ์', packageName: '20 ครั้ง', total: 20, used: 17, remaining: 3,
+    leavesTotal: 4, leavesLeft: 0, months: 4, expireDate: day(-11), daysLeft: -10, status: 'expired', statusText: 'หมดอายุ' };
+  return { name: 'ป้าเยาว์', packageName: '10 ครั้ง', total: 10, used: 6, remaining: 4,
+    leavesTotal: 2, leavesLeft: 1, months: 2, expireDate: day(23), daysLeft: 23, status: 'active', statusText: 'ใช้งานได้' };
+}
+
+if (DEMO) load();
+else liff.init({ liffId: LIFF_ID })
+  .then(() => { if (!liff.isLoggedIn()) liff.login(); else load(); })
+  .catch(() => { $('errText').textContent = 'เปิดผ่าน LINE ไม่สำเร็จ'; show('error'); });
+</script>
+</body>
+</html>
