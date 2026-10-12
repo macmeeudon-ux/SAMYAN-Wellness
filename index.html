@@ -227,7 +227,7 @@ function render(d) {
   if (!d.expireDate) {
     $('dateLabel').textContent = 'ใช้ได้ถึงวันที่';
     $('expire').textContent = 'ยังไม่เริ่มนับ';
-    $('daysLeft').textContent = `เริ่มนับวันแรกที่มาเทรน (${d.months} เดือน)`;
+    $('daysLeft').textContent = `ใช้ได้ ${d.months} เดือนนับจากวันเริ่ม`;
   } else if (expired) {
     $('dateLabel').textContent = 'หมดอายุเมื่อ';
     $('expire').textContent = fmt(d.expireDate);
